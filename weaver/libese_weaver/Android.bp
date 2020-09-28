@@ -1,0 +1,41 @@
+cc_library_shared {
+
+    name: "ese_weaver",
+    defaults: ["hidl_defaults"],
+    proprietary: true,
+
+    srcs: [
+        "src/weaver-impl.cpp",
+        "src/weaver-transport-impl.cpp",
+        "src/weaver-parser-impl.cpp",
+    ],
+
+    local_include_dirs: [
+        "inc",
+    ],
+    include_dirs: [
+        "hardware/nxp/keymaster/libese_transport/include",
+    ],
+
+    cflags: [
+        "-Wall",
+        "-Werror",
+    ],
+
+    shared_libs: [
+        "libcutils",
+        "libese_transport",
+        "libhardware",
+        "libhidlbase",
+        "libutils",
+        "liblog",
+    ],
+
+    product_variables: {
+        debuggable: {
+            cflags: [
+                "-DDCHECK_ALWAYS_ON"
+            ],
+        },
+    },
+}
