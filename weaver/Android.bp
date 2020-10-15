@@ -3,6 +3,7 @@ cc_binary {
     relative_install_path: "hw",
     name: "android.hardware.weaver@1.0-service",
     init_rc: ["1.0/android.hardware.weaver@1.0-service.rc"],
+    vintf_fragments: ["1.0/android.hardware.weaver@1.0-service.xml"],
     proprietary: true,
     defaults: ["hidl_defaults"],
     srcs: [
