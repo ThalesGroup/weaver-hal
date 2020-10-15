@@ -293,9 +293,11 @@ WeaverParserImpl::APP_ERR_CODE
 WeaverParserImpl::checkStatus(std::vector<uint8_t> response) {
   LOG_D(TAG, "Entry");
   APP_ERR_CODE status = APP_FAILED;
-  if (response.size() >= RES_STATUS_SIZE &&
-      response.at(response.size() - 2) == SUCCESS_SW1 &&
-      response.at(response.size() - 1) == SUCCESS_SW2) {
+  if (RES_STATUS_SIZE > response.size()) {
+    LOG_E(TAG, "Response is too short");
+    status = APP_FAILED;
+  } else if (response.at(response.size() - 2) == SUCCESS_SW1 &&
+             response.at(response.size() - 1) == SUCCESS_SW2) {
     LOG_D(TAG, "SUCCESS");
     status = APP_SUCCESS;
   } else if (response.at(response.size() - 2) == INVALID_SLOT_SW1 &&
