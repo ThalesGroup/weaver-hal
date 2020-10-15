@@ -12,7 +12,7 @@ cc_binary {
 
     shared_libs: [
         "android.hardware.weaver@1.0",
-        "libbase",
+        "ese_weaver",
         "libcutils",
         "libdl",
         "libhardware",
@@ -22,6 +22,7 @@ cc_binary {
     ],
 
     local_include_dirs: [
+        "libese_weaver/inc/"
     ],
 
     include_dirs: [
