@@ -38,29 +38,36 @@ using android::status_t;
 using android::OK;
 
 int main() {
-  status_t status;
+  try {
+    status_t status;
 
-  android::sp<IWeaver> weaver_service = nullptr;
+    android::sp<IWeaver> weaver_service = nullptr;
+    ALOGI("Weaver HAL Service 1.0 is starting.");
+    weaver_service = new Weaver();
+    if (weaver_service == nullptr) {
+      ALOGE("Can not create an instance of Weaver HAL Interface, exiting.");
+      goto shutdown;
+    }
+    configureRpcThreadpool(1, true /*callerWillJoin*/);
+    status = weaver_service->registerAsService();
 
-  ALOGI("Weaver HAL Service 1.0 is starting.");
-  weaver_service = new Weaver();
-  if (weaver_service == nullptr) {
-    ALOGE("Can not create an instance of Weaver HAL Interface, exiting.");
-    goto shutdown;
+    if (status != OK) {
+      ALOGE("Could not register service for Weaver HAL Interface (%d)", status);
+      goto shutdown;
+    }
+    ALOGI("Weaver Service is ready");
+
+    joinRpcThreadpool();
+  } catch (std::length_error& e) {
+    ALOGE("Length Exception occurred = %s ", e.what());
+  } catch (std::__1::ios_base::failure& e) {
+    ALOGE("ios failure Exception occurred = %s ", e.what());
+  } catch (std::__1::system_error& e) {
+    ALOGE("system error Exception occurred = %s ", e.what());
   }
-  configureRpcThreadpool(1, true /*callerWillJoin*/);
-  status = weaver_service->registerAsService();
-
-  if (status != OK) {
-    ALOGE("Could not register service for Weaver HAL Interface (%d)", status);
-    goto shutdown;
-  }
-  ALOGI("Weaver Service is ready");
-
-  joinRpcThreadpool();
-  // Should not pass this line
+    // Should not pass this line
 shutdown:
-  // In normal operation, we don't expect the thread pool to exit
-  ALOGE("Weaver Service is shutting down");
-  return 1;
+    // In normal operation, we don't expect the thread pool to exit
+    ALOGE("Weaver Service is shutting down");
+    return 1;
 }
