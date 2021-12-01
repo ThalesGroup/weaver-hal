@@ -17,7 +17,8 @@
  ******************************************************************************/
 
 #define LOG_TAG "weaver-transport-impl"
-#include <Transport.h>
+#include <vector>
+#include <ITransport.h>
 #include <TransportFactory.h>
 #include <weaver_transport-impl.h>
 #include <weaver_utils.h>

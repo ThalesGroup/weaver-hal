@@ -13,9 +13,6 @@ cc_library_shared {
     local_include_dirs: [
         "inc",
     ],
-    include_dirs: [
-        "hardware/nxp/keymaster/libese_transport/include",
-    ],
 
     cflags: [
         "-Wall",
@@ -24,7 +21,7 @@ cc_library_shared {
 
     shared_libs: [
         "libcutils",
-        "libese_transport",
+        "libjc_keymint_transport",
         "libhardware",
         "libhidlbase",
         "libutils",
