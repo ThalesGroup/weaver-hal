@@ -1,4 +1,4 @@
 service weaver_hal_service /vendor/bin/hw/android.hardware.weaver@1.0-service
     class hal
-    user  system
+    user  vendor_nxp_weaver
     group system drmrpc
