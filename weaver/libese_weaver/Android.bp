@@ -17,6 +17,7 @@ cc_library_shared {
     cflags: [
         "-Wall",
         "-Werror",
+        "-DOMAPI_TRANSPORT",
     ],
 
     shared_libs: [
@@ -26,6 +27,10 @@ cc_library_shared {
         "libhidlbase",
         "libutils",
         "liblog",
+    ],
+
+    static_libs: [
+        "android.se.omapi-V1-ndk",
     ],
 
     product_variables: {

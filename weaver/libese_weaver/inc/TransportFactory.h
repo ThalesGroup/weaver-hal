@@ -30,7 +30,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  **
- ** Copyright 2020-2021 NXP
+ ** Copyright 2020-2022 NXP
  **
  *********************************************************************************/
 
@@ -38,6 +38,7 @@
 #define __SE_TRANSPORT_FACTORY__
 
 #include "HalToHalTransport.h"
+#include "OmapiTransport.h"
 #include "SocketTransport.h"
 
 namespace se_transport {
@@ -45,6 +46,7 @@ namespace se_transport {
 using keymint::javacard::HalToHalTransport;
 using keymint::javacard::ITransport;
 using keymint::javacard::SocketTransport;
+using keymint::javacard::OmapiTransport;
 /**
  * TransportFactory class decides which transport mechanism to be used to send data to secure element. In case of
  * emulator the communication channel is socket and in case of device the communication channel is via OMAPI.
@@ -52,8 +54,13 @@ using keymint::javacard::SocketTransport;
 class TransportFactory {
     public:
     TransportFactory(bool isEmulator, const std::vector<uint8_t>& mAppletAID) {
-        if (!isEmulator)
+        if (!isEmulator) {
+#ifdef OMAPI_TRANSPORT
+            mTransport = std::unique_ptr<OmapiTransport>(new OmapiTransport(mAppletAID));
+#else
             mTransport = std::unique_ptr<HalToHalTransport>(new HalToHalTransport(mAppletAID));
+#endif
+        }
 #ifndef NXP_EXTNS
         else
             mTransport = std::unique_ptr<SocketTransport>(new SocketTransport(mAppletAID));
