@@ -46,7 +46,10 @@ namespace se_transport {
 using keymint::javacard::HalToHalTransport;
 using keymint::javacard::ITransport;
 using keymint::javacard::SocketTransport;
+#ifdef OMAPI_TRANSPORT
 using keymint::javacard::OmapiTransport;
+#endif
+
 /**
  * TransportFactory class decides which transport mechanism to be used to send data to secure element. In case of
  * emulator the communication channel is socket and in case of device the communication channel is via OMAPI.

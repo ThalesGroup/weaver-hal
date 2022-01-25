@@ -21,16 +21,13 @@ cc_library_shared {
     ],
 
     shared_libs: [
+        "android.se.omapi-V1-ndk",
         "libcutils",
         "libjc_keymint_transport",
         "libhardware",
         "libhidlbase",
         "libutils",
         "liblog",
-    ],
-
-    static_libs: [
-        "android.se.omapi-V1-ndk",
     ],
 
     product_variables: {
