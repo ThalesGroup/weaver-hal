@@ -38,3 +38,38 @@ cc_library_shared {
         },
     },
 }
+
+cc_library {
+    name: "libjc_keymint_transport",
+    vendor_available: true,
+    srcs: [
+        "transport/*.cpp",
+    ],
+    cflags: [
+        "-DOMAPI_TRANSPORT",
+        "-DINTERVAL_TIMER",
+        "-DNXP_EXTNS",
+    ],
+    export_include_dirs: [
+        "transport/include"
+    ],
+    export_shared_lib_headers: [
+        "android.hardware.secure_element@1.0",
+        "android.hardware.secure_element@1.1",
+        "android.hardware.secure_element@1.2",
+    ],
+    shared_libs: [
+        "android.hardware.secure_element@1.0",
+        "android.hardware.secure_element@1.1",
+        "android.hardware.secure_element@1.2",
+        "android.se.omapi-V1-ndk",
+        "libbase",
+        "liblog",
+        "libcutils",
+        "libutils",
+        "libhardware",
+        "libhidlbase",
+        "libbinder_ndk",
+    ],
+}
+
