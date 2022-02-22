@@ -137,13 +137,14 @@ public class Weaver extends Applet {
         p1p2Unused(apdu);
         //dataUnused(apdu);
         // TODO(ascull): how to handle the cases of APDU properly?
-        apdu.setOutgoing();
-        apdu.setOutgoingLength((short) 2);
+        prepareToSend(apdu, (short) 4);
+        apdu.setOutgoingLength((short) 4);
 
         final byte buffer[] = apdu.getBuffer();
-        Util.setShort(buffer, (short) 0, mSlots.getNumSlots());
+        Util.setShort(buffer, (short) 0, (short) 0);
+        Util.setShort(buffer, (short) 2, mSlots.getNumSlots());
 
-        apdu.sendBytes((short) 0, (byte) 2);
+        apdu.sendBytes((short) 0, (byte) 4);
     }
 
     public static final short WRITE_DATA_BYTES
@@ -189,7 +190,7 @@ public class Weaver extends Applet {
 
         p1p2Unused(apdu);
         receiveData(apdu, READ_DATA_BYTES);
-        apdu.setOutgoing();
+        prepareToSend(apdu, successSize);
 
         final byte buffer[] = apdu.getBuffer();
         final short slotId = getSlotId(buffer, READ_DATA_SLOT_ID_OFFSET);

@@ -31,17 +31,6 @@ namespace keymint::javacard {
 using std::shared_ptr;
 using std::vector;
 
-void print(std::string msg, std::vector<uint8_t> data) {
-  std::stringstream ss;
-  ss << std::hex;
-  for (auto& ch : data) {
-    ss << std::setfill('0') << std::right << std::setw(2) << (int) ch;
-  }
-  LOG(ERROR) << msg << " : " << ss.str();
-
-}
-
-
 bool SocketTransport::openConnection() {
     struct sockaddr_in serv_addr;
     if ((mSocket = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -102,7 +91,6 @@ bool SocketTransport::sendData(const vector<uint8_t>& inData, vector<uint8_t>& o
     for (size_t i = 0; i < valRead; i++) {
         output.push_back(buffer[i]);
     }
-    print("Socket read resp: ", output);
     return true;
 }
 

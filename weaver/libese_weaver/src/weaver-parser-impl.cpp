@@ -30,7 +30,9 @@ std::once_flag WeaverParserImpl::s_instanceFlag;
 #define INS_WRITE 0x04
 #define P1 0x00
 #define P2 0x00
-#define LE 0x00
+#define LE_READ_CMD 0x11
+#define LE_GET_SLOT_CMD 0x04
+#define LE_WRITE_CMD 0x00
 
 /* Error code for weaver commands response */
 #define SUCCESS_SW1 0x90
@@ -119,7 +121,7 @@ bool WeaverParserImpl::FrameGetSlotCmd(std::vector<uint8_t> &request) {
   request.push_back(INS_GET_SLOT);
   request.push_back(P1);
   request.push_back(P2);
-  request.push_back(LE);
+  request.push_back(LE_GET_SLOT_CMD);
   LOG_D(TAG, "Exit");
   return true;
 }
@@ -150,7 +152,7 @@ bool WeaverParserImpl::FrameReadCmd(uint32_t slotId,
   request.push_back(SHIFT_MASK & (slotId >> BYTE3_MSB_POS));
   request.push_back(SHIFT_MASK & slotId);
   request.insert(std::end(request), std::begin(key), std::end(key));
-  request.push_back(LE);
+  request.push_back(LE_READ_CMD);
   LOG_D(TAG, "Exit");
   return true;
 }
@@ -184,7 +186,7 @@ bool WeaverParserImpl::FrameWriteCmd(uint32_t slotId,
   request.push_back(SHIFT_MASK & slotId);
   request.insert(std::end(request), std::begin(key), std::end(key));
   request.insert(std::end(request), std::begin(value), std::end(value));
-  request.push_back(LE);
+  request.push_back(LE_WRITE_CMD);
   LOG_D(TAG, "Exit");
   return true;
 }
@@ -205,10 +207,11 @@ Status_Weaver WeaverParserImpl::ParseSlotInfo(std::vector<uint8_t> response,
   Status_Weaver status = WEAVER_STATUS_FAILED;
   slotInfo.slots = 0;
   if (isSuccess(response)) {
-    /* Read 2 bytes for number of slot as integer. Since Applet supports no of
-     * slot as short*/
-    uint32_t slots = response.at(SLOT_ID_INDEX) << BYTE3_MSB_POS;
-    slots |= response.at(SLOT_ID_INDEX + 1);
+    /* Read 4 bytes for number of slot as integer. */
+    uint32_t slots = response.at(SLOT_ID_INDEX) << BYTE1_MSB_POS;
+    slots |= response.at(SLOT_ID_INDEX + 1) << BYTE2_MSB_POS;
+    slots |= response.at(SLOT_ID_INDEX + 2) << BYTE3_MSB_POS;
+    slots |= response.at(SLOT_ID_INDEX + 3);
     slotInfo.slots = slots;
     slotInfo.keySize = KEY_SIZE;
     slotInfo.valueSize = VALUE_SIZE;

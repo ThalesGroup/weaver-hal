@@ -16,8 +16,6 @@
 
 package com.android.weaver.core;
 
-import com.android.weaver.Slots;
-
 import javacard.framework.AID;
 import javacard.framework.APDU;
 import javacard.framework.Applet;
