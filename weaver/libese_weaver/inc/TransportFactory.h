@@ -39,34 +39,26 @@
 
 #include "HalToHalTransport.h"
 #include "OmapiTransport.h"
-#include "SocketTransport.h"
 
 namespace se_transport {
 
 using keymint::javacard::HalToHalTransport;
 using keymint::javacard::ITransport;
-using keymint::javacard::SocketTransport;
 #ifdef OMAPI_TRANSPORT
 using keymint::javacard::OmapiTransport;
 #endif
 
 /**
- * TransportFactory class decides which transport mechanism to be used to send data to secure element. In case of
- * emulator the communication channel is socket and in case of device the communication channel is via OMAPI.
+ * TransportFactory class decides which transport mechanism to be used to send data to secure element.
+ * The communication channel is via OMAPI.
  */
 class TransportFactory {
     public:
-    TransportFactory(bool isEmulator, const std::vector<uint8_t>& mAppletAID) {
-        if (!isEmulator) {
+    TransportFactory(const std::vector<uint8_t>& mAppletAID) {
 #ifdef OMAPI_TRANSPORT
             mTransport = std::unique_ptr<OmapiTransport>(new OmapiTransport(mAppletAID));
 #else
             mTransport = std::unique_ptr<HalToHalTransport>(new HalToHalTransport(mAppletAID));
-#endif
-        }
-#ifndef NXP_EXTNS
-        else
-            mTransport = std::unique_ptr<SocketTransport>(new SocketTransport(mAppletAID));
 #endif
     }
 
@@ -104,7 +96,7 @@ class TransportFactory {
 
     private:
     /**
-     * Holds the instance of either OmapiTransport class or SocketTransport class.
+     * Holds the instance of OmapiTransport class
      */
     std::unique_ptr<ITransport> mTransport;
 

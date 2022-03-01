@@ -59,7 +59,7 @@ public:
      * Gets the binder instance of ISEService, gets the reader corresponding to secure element, establishes a session
      * and opens a basic channel.
      */
-	bool openConnection() override;
+    bool openConnection() override;
     /**
      * Transmists the data over the opened basic channel and receives the data back.
      */
@@ -73,37 +73,6 @@ public:
      * broken.
      */
     bool isConnected() override;
-
-};
-
-class SocketTransport : public ITransport {
-
-public:
-    SocketTransport() : mSocket(-1), socketStatus(false) {
-    }
-    /**
-     * Creates a socket instance and connects to the provided server IP and port.
-     */
-	bool openConnection() override;
-    /**
-     * Sends data over socket and receives data back.
-     */
-    bool sendData(const uint8_t* inData, const size_t inLen, std::vector<uint8_t>& output) override;
-    /**
-     * Closes the connection.
-     */
-    bool closeConnection() override;
-    /**
-     * Returns the state of the connection status. Returns true if the connection is active, false if connection is
-     * broken.
-     */
-    bool isConnected() override;
-private:
-    /**
-     * Socket instance.
-     */
-    int mSocket;
-    bool socketStatus;
 
 };
 

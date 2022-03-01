@@ -40,7 +40,7 @@ static inline std::unique_ptr<se_transport::TransportFactory> &
 getTransportFactoryInstance() {
   if (pTransportFactory == nullptr) {
     pTransportFactory = std::unique_ptr<se_transport::TransportFactory>(
-        new se_transport::TransportFactory(false, kAppletId));
+        new se_transport::TransportFactory(kAppletId));
     pTransportFactory->openConnection();
   }
   return pTransportFactory;
