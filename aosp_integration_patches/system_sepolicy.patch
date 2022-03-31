@@ -1,28 +1,8 @@
-diff --git a/public/hal_neverallows.te b/public/hal_neverallows.te
-index e77ea9df0..bbdf74960 100644
---- a/public/hal_neverallows.te
-+++ b/public/hal_neverallows.te
-@@ -2,6 +2,7 @@
- # network capabilities
- neverallow {
-   halserverdomain
-+  -hal_weaver_server
-   -hal_bluetooth_server
-   -hal_can_controller_server
-   -hal_wifi_server
-@@ -37,6 +38,7 @@ neverallow {
- 
- neverallow {
-   halserverdomain
-+  -hal_weaver_server
-   -hal_automotive_socket_exemption
-   -hal_can_controller_server
-   -hal_tetheroffload_server
 diff --git a/vendor/file_contexts b/vendor/file_contexts
-index 762cf2089..402004b12 100644
+index 0cfb7cf39..74aef4bd0 100644
 --- a/vendor/file_contexts
 +++ b/vendor/file_contexts
-@@ -81,6 +81,7 @@
+@@ -82,6 +82,7 @@
  /(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@[0-9]\.[0-9]-service(\.multihal)?  u:object_r:hal_sensors_default_exec:s0
  /(vendor|system/vendor)/bin/hw/android\.hardware\.sensors-service\.example  u:object_r:hal_sensors_default_exec:s0
  /(vendor|system/vendor)/bin/hw/android\.hardware\.secure_element@1\.0-service u:object_r:hal_secure_element_default_exec:s0
@@ -31,16 +11,12 @@ index 762cf2089..402004b12 100644
  /(vendor|system/vendor)/bin/hw/android\.hardware\.security\.keymint-service   u:object_r:hal_keymint_default_exec:s0
  /(vendor|system/vendor)/bin/hw/rild                                           u:object_r:rild_exec:s0
 diff --git a/vendor/hal_weaver_default.te b/vendor/hal_weaver_default.te
-index 0dd767982..1fc3796ed 100644
+index 0dd767982..9a8bbc040 100644
 --- a/vendor/hal_weaver_default.te
 +++ b/vendor/hal_weaver_default.te
-@@ -3,3 +3,9 @@ hal_server_domain(hal_weaver_default, hal_weaver)
+@@ -3,3 +3,5 @@ hal_server_domain(hal_weaver_default, hal_weaver)
  
  type hal_weaver_default_exec, exec_type, vendor_file_type, file_type;
  init_daemon_domain(hal_weaver_default)
 +
-+# Allow access to sockets
-+allow hal_weaver_default self:tcp_socket { connect create write read getattr getopt setopt };
-+allow hal_weaver_default port_type:tcp_socket name_connect;
-+allow hal_weaver_default port:tcp_socket { name_connect };
-+allow hal_weaver_default vendor_data_file:file { open read getattr };
++allow hal_weaver_default secure_element_service:service_manager find
