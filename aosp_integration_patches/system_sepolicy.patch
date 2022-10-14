@@ -18,18 +18,6 @@ index e77ea9df0..bbdf74960 100644
    -hal_automotive_socket_exemption
    -hal_can_controller_server
    -hal_tetheroffload_server
-diff --git a/vendor/file_contexts b/vendor/file_contexts
-index 762cf2089..402004b12 100644
---- a/vendor/file_contexts
-+++ b/vendor/file_contexts
-@@ -81,6 +81,7 @@
- /(vendor|system/vendor)/bin/hw/android\.hardware\.sensors@[0-9]\.[0-9]-service(\.multihal)?  u:object_r:hal_sensors_default_exec:s0
- /(vendor|system/vendor)/bin/hw/android\.hardware\.sensors-service\.example  u:object_r:hal_sensors_default_exec:s0
- /(vendor|system/vendor)/bin/hw/android\.hardware\.secure_element@1\.0-service u:object_r:hal_secure_element_default_exec:s0
-+/(vendor|system/vendor)/bin/hw/android\.hardware\.weaver@1\.0-service u:object_r:hal_weaver_default_exec:s0
- /(vendor|system/vendor)/bin/hw/android\.hardware\.security\.dice-service\.non-secure-software   u:object_r:hal_dice_default_exec:s0
- /(vendor|system/vendor)/bin/hw/android\.hardware\.security\.keymint-service   u:object_r:hal_keymint_default_exec:s0
- /(vendor|system/vendor)/bin/hw/rild                                           u:object_r:rild_exec:s0
 diff --git a/vendor/hal_weaver_default.te b/vendor/hal_weaver_default.te
 index 0dd767982..1fc3796ed 100644
 --- a/vendor/hal_weaver_default.te

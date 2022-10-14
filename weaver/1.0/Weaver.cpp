@@ -15,111 +15,85 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-#define LOG_TAG "Weaver@1.0-service"
+#define LOG_TAG "Weaver-service-default"
 
 #include "Weaver.h"
 #include <log/log.h>
-#include <string.h>
-#include <hidl/LegacySupport.h>
-#include <weaver_interface.h>
 #include <weaver-impl.h>
+#include <weaver_interface.h>
 
-/* Mutex to synchronize multiple transceive */
+namespace aidl::android::hardware::weaver {
 
-namespace android {
-namespace hardware {
-namespace weaver {
-namespace V1_0 {
-namespace implementation {
-
-  WeaverInterface *pInterface = nullptr;
-  Weaver::Weaver() {
-    ALOGI("INITILIZING WEAVER");
+WeaverInterface* pInterface = nullptr;
+Weaver::Weaver() {
+    ALOGI("INITIALIZING WEAVER");
     pInterface = WeaverImpl::getInstance();
-    if(pInterface != NULL) {
-      pInterface->Init();
+    if (pInterface != NULL) {
+        pInterface->Init();
     }
-  }
+}
 
-  Return<void> Weaver::getConfig(getConfig_cb _hidl_cb) {
-  ALOGI("GETCONFIG API ENTRY");
-    if(_hidl_cb == NULL) {
-      return Void();
-    }
-    WeaverConfig configResp;
-    if(pInterface == NULL) {
-      ALOGI("Weaver Interface not defined");
-      _hidl_cb(WeaverStatus::FAILED, configResp);
-      return Void();
+// Methods from ::android::hardware::weaver::IWeaver follow.
+
+::ndk::ScopedAStatus Weaver::getConfig(WeaverConfig* configResp) {
+    ALOGI("GETCONFIG API ENTRY");
+    if (pInterface == NULL) {
+        ALOGI("Weaver Interface not defined");
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
     }
     SlotInfo slotInfo;
     Status_Weaver status = pInterface->GetSlots(slotInfo);
-    if(status == WEAVER_STATUS_OK) {
-      configResp.slots =  slotInfo.slots;
-      configResp.keySize = slotInfo.keySize;
-      configResp.valueSize = slotInfo.valueSize;
-      ALOGI("Weaver Success for getSlots Slots :(%d)", configResp.slots);
-      _hidl_cb(WeaverStatus::OK, configResp);
+    if (status == WEAVER_STATUS_OK) {
+        configResp->slots = slotInfo.slots;
+        configResp->keySize = slotInfo.keySize;
+        configResp->valueSize = slotInfo.valueSize;
+        ALOGI("Weaver Success for getSlots Slots :(%d)", configResp->slots);
     } else {
-      _hidl_cb(WeaverStatus::FAILED, configResp);
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
     }
-    return Void();
-  }
+    return ::ndk::ScopedAStatus::ok();
+}
 
-  Return<::android::hardware::weaver::V1_0::WeaverStatus>
-    Weaver::write(uint32_t slotId, const hidl_vec<uint8_t>& key, const hidl_vec<uint8_t>& value) {
-      ALOGI("Write API ENTRY");
-      WeaverStatus status = WeaverStatus::FAILED;
-      if(key != NULL && value != NULL && pInterface != NULL
-          && (pInterface->Write(slotId, key, value) == WEAVER_STATUS_OK)) {
-        status = WeaverStatus::OK;
-      }
-      return status;
+::ndk::ScopedAStatus Weaver::read(int32_t slotId, const std::vector<uint8_t>& key,
+                                  WeaverReadResponse* readResp) {
+
+    ALOGI("Read API ENTRY");
+
+    if (pInterface == NULL) {
+        *readResp = {0, {}};
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
     }
-
-  Return<void>
-    Weaver::read(uint32_t slotId, const hidl_vec<uint8_t>& key, read_cb _hidl_cb) {
-      ALOGI("Read API ENTRY");
-      WeaverReadResponse readResp;
-      if(key == NULL || _hidl_cb == NULL || pInterface == NULL) {
-        _hidl_cb(WeaverReadStatus::FAILED, readResp);
-      } else {
-        ReadRespInfo readInfo;
-        Status_Weaver status = pInterface->Read(slotId, key, readInfo);
-        switch (status) {
-          case WEAVER_STATUS_OK:
-            ALOGI("Read OK");
-            readResp.value = readInfo.value;
-            _hidl_cb(WeaverReadStatus::OK, readResp);
-            break;
-          case WEAVER_STATUS_INCORRECT_KEY:
-            ALOGI("Read Incorrect Key");
-            readResp.value.resize(0);
-            readResp.timeout = readInfo.timeout;
-            _hidl_cb(WeaverReadStatus::INCORRECT_KEY, readResp);
-            break;
-          case WEAVER_STATUS_THROTTLE:
-            ALOGI("Read WEAVER_THROTTLE");
-            readResp.value.resize(0);
-            readResp.timeout = readInfo.timeout;
-            _hidl_cb(WeaverReadStatus::THROTTLE, readResp);
-            break;
-          default:
-            readResp.timeout = 0;
-            readResp.value.resize(0);
-            _hidl_cb(WeaverReadStatus::FAILED, readResp);
-        }
-      }
-      return Void();
+    ReadRespInfo readInfo;
+    Status_Weaver status = pInterface->Read(slotId, key, readInfo);
+    switch (status) {
+    case WEAVER_STATUS_OK:
+        ALOGI("Read OK");
+        *readResp = {0, readInfo.value};
+        return ::ndk::ScopedAStatus::ok();
+    case WEAVER_STATUS_INCORRECT_KEY:
+        ALOGI("Read Incorrect Key");
+        *readResp = {readInfo.timeout, {}};
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_INCORRECT_KEY));
+    case WEAVER_STATUS_THROTTLE:
+        ALOGI("Read WEAVER_THROTTLE");
+        *readResp = {readInfo.timeout, {}};
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_THROTTLE));
+    default:
+        *readResp = {0, {}};
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
     }
 
-  void Weaver::serviceDied(uint64_t /*cookie*/, const wp<IBase>& /*who*/) {
-    if(pInterface != NULL) {
-      pInterface->DeInit();
+    return ::ndk::ScopedAStatus::ok();
+}
+
+::ndk::ScopedAStatus Weaver::write(int32_t slotId, const std::vector<uint8_t>& key,
+                                   const std::vector<uint8_t>& value) {
+
+    ALOGI("Write API ENTRY");
+    if ((pInterface == NULL) || (pInterface->Write(slotId, key, value) != WEAVER_STATUS_OK)) {
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
     }
-  }
+    return ::ndk::ScopedAStatus::ok();
 }
-}
-}
-}
-}
+
+}  // namespace aidl::android::hardware::weaver

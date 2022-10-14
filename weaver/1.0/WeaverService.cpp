@@ -1,6 +1,6 @@
 /******************************************************************************
  *
- *  Copyright 2020 NXP
+ *  Copyright 2020, 2022 NXP
  *
  *  Licensed under the Apache License, Version 2.0 (the "License");
  *  you may not use this file except in compliance with the License.
@@ -15,59 +15,27 @@
  *  limitations under the License.
  *
  ******************************************************************************/
-#define LOG_TAG "weaver@1.0-service"
-#include <log/log.h>
-#include <android/hardware/weaver/1.0/IWeaver.h>
-#include <android/hardware/weaver/1.0/types.h>
+#define LOG_TAG "weaver-service-default"
 
-#include <hidl/LegacySupport.h>
 #include <string.h>
+
+#include <android-base/logging.h>
+#include <android/binder_manager.h>
+#include <android/binder_process.h>
+#include <log/log.h>
+
 #include "Weaver.h"
 
-// Generated HIDL files
-using android::hardware::weaver::V1_0::IWeaver;
-using android::hardware::weaver::V1_0::implementation::Weaver;
-using android::hardware::defaultPassthroughServiceImplementation;
-using android::OK;
-using android::hardware::configureRpcThreadpool;
-using android::hardware::registerPassthroughServiceImplementation;
-using android::hardware::joinRpcThreadpool;
-
-using android::sp;
-using android::status_t;
-using android::OK;
+using ::aidl::android::hardware::weaver::Weaver;
 
 int main() {
-  try {
-    status_t status;
+    ABinderProcess_setThreadPoolMaxThreadCount(0);
+    std::shared_ptr<Weaver> weaver = ndk::SharedRefBase::make<Weaver>();
 
-    android::sp<IWeaver> weaver_service = nullptr;
-    ALOGI("Weaver HAL Service 1.0 is starting.");
-    weaver_service = new Weaver();
-    if (weaver_service == nullptr) {
-      ALOGE("Can not create an instance of Weaver HAL Interface, exiting.");
-      goto shutdown;
-    }
-    configureRpcThreadpool(1, true /*callerWillJoin*/);
-    status = weaver_service->registerAsService();
+    const std::string instance = std::string() + Weaver::descriptor + "/default";
+    binder_status_t status = AServiceManager_addService(weaver->asBinder().get(), instance.c_str());
+    CHECK_EQ(status, STATUS_OK);
 
-    if (status != OK) {
-      ALOGE("Could not register service for Weaver HAL Interface (%d)", status);
-      goto shutdown;
-    }
-    ALOGI("Weaver Service is ready");
-
-    joinRpcThreadpool();
-  } catch (std::length_error& e) {
-    ALOGE("Length Exception occurred = %s ", e.what());
-  } catch (std::__1::ios_base::failure& e) {
-    ALOGE("ios failure Exception occurred = %s ", e.what());
-  } catch (std::__1::system_error& e) {
-    ALOGE("system error Exception occurred = %s ", e.what());
-  }
-    // Should not pass this line
-shutdown:
-    // In normal operation, we don't expect the thread pool to exit
-    ALOGE("Weaver Service is shutting down");
-    return 1;
+    ABinderProcess_joinThreadPool();
+    return -1;  // Should never be reached
 }

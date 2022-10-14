@@ -1,25 +1,21 @@
 
 cc_binary {
     relative_install_path: "hw",
-    name: "android.hardware.weaver@1.0-service",
-    init_rc: ["1.0/android.hardware.weaver@1.0-service.rc"],
-    vintf_fragments: ["1.0/android.hardware.weaver@1.0-service.xml"],
+    name: "android.hardware.weaver-service.default",
+    init_rc: ["1.0/android.hardware.weaver-service.default.rc"],
+    vintf_fragments: ["1.0/android.hardware.weaver-service.default.xml"],
     proprietary: true,
-    defaults: ["hidl_defaults"],
     srcs: [
         "1.0/WeaverService.cpp",
         "1.0/Weaver.cpp",
     ],
 
     shared_libs: [
-        "android.hardware.weaver@1.0",
+        "android.hardware.weaver-V1-ndk",
         "ese_weaver",
-        "libcutils",
-        "libdl",
-        "libhardware",
-        "libhidlbase",
+        "libbase",
         "liblog",
-        "libutils",
+        "libbinder_ndk",
     ],
 
     local_include_dirs: [

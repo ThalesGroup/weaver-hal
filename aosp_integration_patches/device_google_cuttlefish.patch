@@ -1,25 +1,26 @@
 diff --git a/shared/device.mk b/shared/device.mk
-index 072429d08..2e8148357 100644
+index 9cb75afa7..1f3e6d9f3 100644
 --- a/shared/device.mk
 +++ b/shared/device.mk
-@@ -366,10 +366,10 @@ PRODUCT_PACKAGES += \
-     android.hardware.atrace@1.0-service
- 
- #
--# Weaver aidl HAL
-+# Weaver hidl HAL
+@@ -360,7 +360,7 @@ PRODUCT_PACKAGES += \
+ # Weaver aidl HAL
  #
  PRODUCT_PACKAGES += \
 -    android.hardware.weaver-service.example
-+    android.hardware.weaver@1.0-service
++    android.hardware.weaver-service.default
  
  #
  # IR aidl HAL
-@@ -612,6 +612,7 @@ endif
-  PRODUCT_PACKAGES += \
-     $(LOCAL_KEYMINT_PRODUCT_PACKAGE)
- 
-+
- # Keymint configuration
- ifneq ($(LOCAL_PREFER_VENDOR_APEX),true)
- PRODUCT_COPY_FILES += \
+diff --git a/shared/sepolicy/vendor/file_contexts b/shared/sepolicy/vendor/file_contexts
+index 8e536e30d..c7b57ef1f 100644
+--- a/shared/sepolicy/vendor/file_contexts
++++ b/shared/sepolicy/vendor/file_contexts
+@@ -107,7 +107,7 @@
+ /vendor/bin/hw/android\.hardware\.gatekeeper-service.remote  u:object_r:hal_gatekeeper_remote_exec:s0
+ /vendor/bin/hw/android\.hardware\.confirmationui-service.cuttlefish  u:object_r:hal_confirmationui_cuttlefish_exec:s0
+ /vendor/bin/hw/android\.hardware\.oemlock-service.example u:object_r:hal_oemlock_default_exec:s0
+-/vendor/bin/hw/android\.hardware\.weaver-service.example u:object_r:hal_weaver_default_exec:s0
++/vendor/bin/hw/android\.hardware\.weaver-service.default u:object_r:hal_weaver_default_exec:s0
+ /vendor/bin/hw/android\.hardware\.authsecret@1\.0-service  u:object_r:hal_authsecret_default_exec:s0
+ /vendor/bin/hw/android\.hardware\.authsecret-service.example u:object_r:hal_authsecret_default_exec:s0
+ /vendor/bin/hw/android\.hardware\.rebootescrow-service\.default  u:object_r:hal_rebootescrow_default_exec:s0
