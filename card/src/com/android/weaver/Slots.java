@@ -36,7 +36,7 @@ public interface Slots extends javacard.framework.Shareable {
      *
      * This is only successful if the key matches that stored in the slot.
      *
-     * @param slotId ID of the slot to write to.
+     * @param slotId ID of the slot to read from.
      * @param key Buffer containing the key.
      * @param keyOffset Offset of the key in the buffer.
      * @param value Buffer to receive the value.

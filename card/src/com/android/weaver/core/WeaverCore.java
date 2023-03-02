@@ -16,21 +16,31 @@
 
 package com.android.weaver.core;
 
+import org.globalplatform.upgrade.Element;
+import org.globalplatform.upgrade.OnUpgradeListener;
+import org.globalplatform.upgrade.UpgradeManager;
+
 import javacard.framework.AID;
 import javacard.framework.APDU;
 import javacard.framework.Applet;
 import javacard.framework.Shareable;
 
-class WeaverCore extends Applet {
+class WeaverCore extends Applet implements OnUpgradeListener {
     public static final byte[] COMMAPP_APPLET_AID
             = new byte[] {(byte) 0xA0, 0x00, 0x00, 0x04, 0x76, 0x57, 0x56,
                                  0x52, 0x43, 0x4F, 0x4D, 0x4D, 0x30};
+
+    // MSB byte is for Major version and LSB byte is for Minor version.
+    public static final short WEAVER_PACKAGE_VERSION = 0x0100;
 
     private CoreSlots mSlots;
 
     protected WeaverCore() {
         // Allocate all memory up front
-        mSlots = new CoreSlots();
+        boolean isUpgrading = UpgradeManager.isUpgrading();
+        if(!isUpgrading) {
+            mSlots = new CoreSlots(isUpgrading);
+        }
         register();
     }
 
@@ -64,5 +74,27 @@ class WeaverCore extends Applet {
      */
     @Override
     public void process(APDU apdu) {
+    }
+
+    @Override
+    public void onCleanup() {
+    }
+
+    @Override
+    public void onConsolidate() {
+    }
+
+    @Override
+    public void onRestore(Element arg0) {
+        if(arg0 == null) {
+            mSlots = new CoreSlots(false);
+        } else {
+            mSlots = CoreSlots.onRestore(arg0);
+        }
+    }
+
+    @Override
+    public Element onSave() {
+        return CoreSlots.onSave(mSlots);
     }
 }

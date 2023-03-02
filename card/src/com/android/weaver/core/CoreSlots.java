@@ -21,6 +21,9 @@ import javacard.framework.ISOException;
 import javacard.framework.JCSystem;
 import javacard.framework.Util;
 
+import org.globalplatform.upgrade.Element;
+import org.globalplatform.upgrade.UpgradeManager;
+
 import com.android.weaver.Consts;
 import com.android.weaver.Slots;
 
@@ -31,11 +34,13 @@ class CoreSlots implements Slots {
 
     private Slot[] mSlots;
 
-    CoreSlots() {
-        // Allocate all memory up front
-        mSlots = new Slot[NUM_SLOTS];
-        for (short i = 0; i < NUM_SLOTS; ++i) {
-            mSlots[i] = new Slot();
+    CoreSlots(boolean isUpgrading) {
+        if (!isUpgrading) {
+            // Allocate all memory up front
+            mSlots = new Slot[NUM_SLOTS];
+            for (short i = 0; i < NUM_SLOTS; ++i) {
+                mSlots[i] = new Slot(isUpgrading);
+            }
         }
 
         // Make the same size as the value so the whole buffer can be copied in read() so there is
@@ -77,7 +82,7 @@ class CoreSlots implements Slots {
     }
 
     /**
-     * Check the slot ID is within range and convert it to a short.
+     * Check the slot ID is within range.
      */
     private short validateSlotId(short slotId) {
         // slotId is unsigned so if the signed version is negative then it is far too big
@@ -90,10 +95,17 @@ class CoreSlots implements Slots {
     private static class Slot {
         private static byte[] sRemainingBackoff;
 
-        private byte[] mKey = new byte[Consts.SLOT_KEY_BYTES];
-        private byte[] mValue = new byte[Consts.SLOT_VALUE_BYTES];
+        private byte[] mKey;
+        private byte[] mValue;
         private short mFailureCount;
         private DSTimer mBackoffTimer;
+
+        Slot(boolean isUpgrading) {
+            if(!isUpgrading) {
+                mKey = new byte[Consts.SLOT_KEY_BYTES];
+                mValue = new byte[Consts.SLOT_VALUE_BYTES];
+            }
+        }
 
         /**
          * Transactionally reset the slot with a new key and value.
@@ -240,5 +252,62 @@ class CoreSlots implements Slots {
 
             return highWord != 0 || lowWord != 0;
         }
+
+        static public short getBackupPrimitiveByteCount() {
+            //mFailureCount- 2 bytes
+            //boolean value to check timer instance created- 1 byte
+            return (short)3;
+        }
+
+        static public short getBackupObjectCount() {
+            //key - 1
+            //value 1
+	    return (short)2;
+	}
+
+        static public void onSave(Element element, Slot sObj) {
+            element.write(sObj.mBackoffTimer != null);
+            element.write(sObj.mFailureCount);
+            element.write(sObj.mKey);
+            element.write(sObj.mValue);
+        }
+
+        static public void onRestore(Element element, Slot sObj) {
+	    if(element.readBoolean()) {
+                sObj.mBackoffTimer = DSTimer.getInstance();
+	    }
+	    sObj.mFailureCount = element.readShort();
+	    sObj.mKey = (byte[]) element.readObject();
+	    sObj.mValue = (byte[]) element.readObject();
+        }
+    }
+
+    static Element onSave(CoreSlots csObj) {
+        //WEAVER_PACKAGE_VERSION- 2 bytes
+        short primitiveCount = 2;
+        primitiveCount += (Slot.getBackupPrimitiveByteCount() * NUM_SLOTS);
+        short objectCount = (short)(Slot.getBackupObjectCount() * NUM_SLOTS);
+        // Create element.
+	Element element =
+	        UpgradeManager.createElement(Element.TYPE_SIMPLE, primitiveCount, objectCount);
+        element.write(WeaverCore.WEAVER_PACKAGE_VERSION);
+	for(short i = 0; i< NUM_SLOTS; i++) {
+	    Slot.onSave(element, csObj.mSlots[i]);
+        }
+	return element;
+    }
+
+    static CoreSlots onRestore(Element ele) {
+        short oldVersion = ele.readShort();
+        if (WeaverCore.WEAVER_PACKAGE_VERSION < oldVersion) {
+            ISOException.throwIt(ISO7816.SW_CONDITIONS_NOT_SATISFIED);
+        }
+        CoreSlots csObj = new CoreSlots(true);
+        csObj.mSlots = new Slot[NUM_SLOTS];
+        for (short i = 0; i < NUM_SLOTS; ++i) {
+            csObj.mSlots[i] = new Slot(true);
+            Slot.onRestore(ele, csObj.mSlots[i]);
+        }
+        return csObj;
     }
 }
