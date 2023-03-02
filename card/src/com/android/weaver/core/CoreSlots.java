@@ -266,7 +266,7 @@ class CoreSlots implements Slots {
 	}
 
         static public void onSave(Element element, Slot sObj) {
-            element.write((sObj.mBackoffTimer != null) ? true : false);
+            element.write(sObj.mBackoffTimer != null);
             element.write(sObj.mFailureCount);
             element.write(sObj.mKey);
             element.write(sObj.mValue);

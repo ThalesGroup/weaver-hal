@@ -86,7 +86,11 @@ class WeaverCore extends Applet implements OnUpgradeListener {
 
     @Override
     public void onRestore(Element arg0) {
-        mSlots = CoreSlots.onRestore(arg0);
+        if(arg0 == null) {
+            mSlots = new CoreSlots(false);
+        } else {
+            mSlots = CoreSlots.onRestore(arg0);
+        }
     }
 
     @Override
