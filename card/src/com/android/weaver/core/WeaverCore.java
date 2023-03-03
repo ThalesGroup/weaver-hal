@@ -31,7 +31,7 @@ class WeaverCore extends Applet implements OnUpgradeListener {
                                  0x52, 0x43, 0x4F, 0x4D, 0x4D, 0x30};
 
     // MSB byte is for Major version and LSB byte is for Minor version.
-    public static final short WEAVER_PACKAGE_VERSION = 0x0100;
+    public static final short WEAVER_PACKAGE_VERSION = 0x0200;
 
     private CoreSlots mSlots;
 

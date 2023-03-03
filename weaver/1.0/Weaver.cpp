@@ -60,27 +60,26 @@ Weaver::Weaver() {
     ALOGI("Read API ENTRY");
 
     if (pInterface == NULL) {
-        *readResp = {0, {}};
-        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
+        *readResp = {0, {}, WeaverReadStatus::FAILED};
+        return ::ndk::ScopedAStatus::ok();
     }
     ReadRespInfo readInfo;
     Status_Weaver status = pInterface->Read(slotId, key, readInfo);
     switch (status) {
     case WEAVER_STATUS_OK:
         ALOGI("Read OK");
-        *readResp = {0, readInfo.value};
-        return ::ndk::ScopedAStatus::ok();
+        *readResp = {0, readInfo.value, WeaverReadStatus::OK};
+        break;
     case WEAVER_STATUS_INCORRECT_KEY:
         ALOGI("Read Incorrect Key");
-        *readResp = {readInfo.timeout, {}};
-        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_INCORRECT_KEY));
+        *readResp = {readInfo.timeout, {}, WeaverReadStatus::INCORRECT_KEY};
+        break;
     case WEAVER_STATUS_THROTTLE:
         ALOGI("Read WEAVER_THROTTLE");
-        *readResp = {readInfo.timeout, {}};
-        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_THROTTLE));
+        *readResp = {readInfo.timeout, {}, WeaverReadStatus::THROTTLE};
+        break;
     default:
-        *readResp = {0, {}};
-        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
+        *readResp = {0, {}, WeaverReadStatus::FAILED};
     }
 
     return ::ndk::ScopedAStatus::ok();
