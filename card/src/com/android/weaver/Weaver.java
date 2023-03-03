@@ -98,6 +98,11 @@ public class Weaver extends Applet {
                     ISOException.throwIt(ISO7816.SW_INS_NOT_SUPPORTED);
             }
         }
+        
+        // Validate CLA
+        if (!apdu.isValidCLA()) {
+          ISOException.throwIt(ISO7816.SW_CLA_NOT_SUPPORTED);
+        }
 
         // Handle custom applet commands
         switch (ins) {
