@@ -140,8 +140,6 @@ public class Weaver extends Applet {
      */
     private void getNumSlots(APDU apdu) {
         p1p2Unused(apdu);
-        //dataUnused(apdu);
-        // TODO(ascull): how to handle the cases of APDU properly?
         prepareToSend(apdu, (short) 4);
         apdu.setOutgoingLength((short) 4);
 
@@ -290,7 +288,7 @@ public class Weaver extends Applet {
      */
     private void prepareToSend(APDU apdu, short expectedMaxLength) {
         final short outDataLen = apdu.setOutgoing();
-        if (outDataLen != expectedMaxLength) {
+        if (outDataLen < expectedMaxLength) {
             ISOException.throwIt(ISO7816.SW_WRONG_LENGTH);
         }
     }
