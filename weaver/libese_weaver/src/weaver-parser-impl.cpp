@@ -65,8 +65,7 @@ std::once_flag WeaverParserImpl::s_instanceFlag;
 #define BYTE1_MSB_POS 24
 
 /* Applet ID to be used for Weaver */
-const std::vector<uint8_t> kWeaverAID = {0xA0, 0x00, 0x00, 0x03,
-                                         0x96, 0x10, 0x10};
+const std::vector<uint8_t> kWeaverAID = {0xA0, 0x00, 0x00, 0x08, 0x44, 0x53, 0xF1, 0x27, 0x56, 0x18, 0x01, 0x00};
 
 /**
  * \brief static function to get the singleton instance of WeaverParserImpl

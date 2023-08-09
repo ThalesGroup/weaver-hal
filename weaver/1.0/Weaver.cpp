@@ -24,6 +24,8 @@
 
 namespace aidl::android::hardware::weaver {
 
+using ::aidl::android::hardware::weaver::WeaverReadStatus;
+
 WeaverInterface* pInterface = nullptr;
 Weaver::Weaver() {
     ALOGI("INITIALIZING WEAVER");
