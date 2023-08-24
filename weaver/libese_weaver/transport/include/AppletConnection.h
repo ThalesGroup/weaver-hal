@@ -33,27 +33,18 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
+#ifndef OMAPI_TRANSPORT
 #ifndef __APPLETCONNECTION_H__
 #define __APPLETCONNECTION_H__
 
-#include <android/hardware/secure_element/1.0/types.h>
-#include <android/hardware/secure_element/1.1/ISecureElementHalCallback.h>
-#include <android/hardware/secure_element/1.2/ISecureElement.h>
 #include <hidl/MQDescriptor.h>
 #include <hidl/Status.h>
 #include <vector>
+#include <android/binder_manager.h>
+#include <aidl/android/hardware/secure_element/ISecureElement.h>
+using aidl::android::hardware::secure_element::ISecureElement;
 
 namespace keymint::javacard {
-
-using ::android::hardware::hidl_array;
-using ::android::hardware::hidl_memory;
-using ::android::hardware::hidl_string;
-using ::android::hardware::hidl_vec;
-using ::android::hardware::Return;
-using ::android::hardware::Void;
-using ::android::sp;
-using ::android::hardware::secure_element::V1_2::ISecureElement;
-using ::android::hardware::secure_element::V1_1::ISecureElementHalCallback;
 
 struct AppletConnection {
 public:
@@ -97,10 +88,11 @@ public:
   bool selectApplet(std::vector<uint8_t>& resp, uint8_t p2);
 
   std::mutex channel_mutex_;  // exclusive access to isChannelopen()/close()
-  sp<ISecureElement> mSEClient;
+  std::shared_ptr<ISecureElement> mSEClient;
   std::vector<uint8_t> kAppletAID;
   int8_t mOpenChannel = -1;
 };
 
 }  // namespace keymint::javacard
 #endif  // __APPLETCONNECTION_H__
+#endif

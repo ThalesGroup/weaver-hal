@@ -22,6 +22,7 @@ cc_library_shared {
 
     shared_libs: [
         "android.se.omapi-V1-ndk",
+        "android.hardware.secure_element-V1-ndk",
         "libcutils",
         "libjc_weaver_transport",
         "libhardware",
@@ -53,15 +54,8 @@ cc_library {
     export_include_dirs: [
         "transport/include"
     ],
-    export_shared_lib_headers: [
-        "android.hardware.secure_element@1.0",
-        "android.hardware.secure_element@1.1",
-        "android.hardware.secure_element@1.2",
-    ],
     shared_libs: [
-        "android.hardware.secure_element@1.0",
-        "android.hardware.secure_element@1.1",
-        "android.hardware.secure_element@1.2",
+        "android.hardware.secure_element-V1-ndk",
         "android.se.omapi-V1-ndk",
         "libbase",
         "liblog",
@@ -70,6 +64,7 @@ cc_library {
         "libhardware",
         "libhidlbase",
         "libbinder_ndk",
+        "libbinder",
     ],
 }
 

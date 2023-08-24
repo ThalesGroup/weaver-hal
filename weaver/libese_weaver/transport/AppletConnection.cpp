@@ -33,7 +33,8 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
-#define LOG_TAG "OmapiTransport"
+#ifndef OMAPI_TRANSPORT
+#define LOG_TAG "AppletConnection"
 
 #include <android-base/logging.h>
 #include <android-base/stringprintf.h>
@@ -47,47 +48,28 @@
 #include <AppletConnection.h>
 #include <EseTransportUtils.h>
 #include <SignalHandler.h>
+#include <stdlib.h>
+#include <binder/IBinder.h>
+#include <binder/IServiceManager.h>
 
-using ::android::hardware::secure_element::V1_0::SecureElementStatus;
-using ::android::hardware::secure_element::V1_0::LogicalChannelResponse;
+#include <aidl/android/hardware/secure_element/BnSecureElementCallback.h>
+
+
+using aidl::android::hardware::secure_element::BnSecureElementCallback;
+
+using aidl::android::hardware::secure_element::LogicalChannelResponse;
+using ndk::ScopedAStatus;
+using ndk::SharedRefBase;
+using ndk::SpAIBinder;
+
 using android::base::StringPrintf;
+
+using namespace android;
 
 namespace keymint::javacard {
 
 static bool isStrongBox = false; // true when linked with StrongBox HAL process
 const std::vector<uint8_t> kStrongBoxAppletAID = {0xA0, 0x00, 0x00, 0x00, 0x62};
-
-class SecureElementCallback : public ISecureElementHalCallback {
- public:
-    Return<void> onStateChange(bool state) override {
-        mSEClientState = state;
-        return Void();
-    };
-    Return<void> onStateChange_1_1(bool state, const hidl_string& reason) override {
-        LOGD_OMAPI("connected =" << (state?"true " : "false " ) << "reason: " << reason);
-        mSEClientState = state;
-        return Void();
-    };
-    bool isClientConnected() {
-        return mSEClientState;
-    }
- private:
-    bool mSEClientState = false;
-};
-
-sp<SecureElementCallback> mCallback = nullptr;
-
-class SEDeathRecipient : public android::hardware::hidl_death_recipient {
-  virtual void serviceDied(uint64_t /*cookie*/, const android::wp<::android::hidl::base::V1_0::IBase>& /*who*/) {
-    LOG(ERROR) << "Secure Element Service died disconnecting SE HAL .....";
-    if(mCallback != nullptr) {
-      LOG(INFO) << "Changing state to disconnect ...";
-      mCallback->onStateChange(false);// Change state to disconnect
-    }
-  }
-};
-
-sp<SEDeathRecipient> mSEDeathRecipient = nullptr;
 
 AppletConnection::AppletConnection(const std::vector<uint8_t>& aid) : kAppletAID(aid) {
     if (kAppletAID == kStrongBoxAppletAID) {
@@ -95,12 +77,23 @@ AppletConnection::AppletConnection(const std::vector<uint8_t>& aid) : kAppletAID
     }
 }
 
+class MySecureElementCallback : public BnSecureElementCallback {
+  public:
+    ScopedAStatus onStateChange(bool state, const std::string& debugReason) override {
+        LOG(INFO) << "onStateChange state = "<< state;
+        LOG(INFO) << "onStateChange debugReason = "<< debugReason;
+        return ScopedAStatus::ok();
+    };
+};
+
+std::shared_ptr<MySecureElementCallback> secure_element_callback_;
+
 bool AppletConnection::connectToSEService() {
     if (!SignalHandler::getInstance()->isHandlerRegistered()) {
         LOG(INFO) << "register signal handler";
         SignalHandler::getInstance()->installHandler(this);
     }
-    if (mSEClient != nullptr && mCallback->isClientConnected()) {
+    if (mSEClient != nullptr) {
         LOG(INFO) <<"Already connected";
         return true;
     }
@@ -108,39 +101,48 @@ bool AppletConnection::connectToSEService() {
     uint8_t retry = 0;
     bool status = false;
     while (( mSEClient == nullptr ) && retry++ < MAX_GET_SERVICE_RETRY ){ // How long should we try before giving up !
-      mSEClient = ISecureElement::tryGetService("eSE1");
+      SpAIBinder binder = SpAIBinder(AServiceManager_waitForService("android.hardware.secure_element.ISecureElement/eSE1"));
+
+      mSEClient = ISecureElement::fromBinder(binder);
 
       if(mSEClient == nullptr){
         LOG(ERROR) << "failed to get eSE HAL service : retry after 1 sec , retry cnt = " << android::hardware::toString(retry) ;
       }else {
         LOG(INFO) << " !!! SuccessFully got Handle to eSE HAL service" ;
-        if (mCallback == nullptr) {
-          mCallback = new SecureElementCallback();
-        }
-        mSEDeathRecipient = new SEDeathRecipient();
-        mSEClient->init_1_1(mCallback);
-        mSEClient->linkToDeath(mSEDeathRecipient, 0/*cookie*/);
-        status = mCallback->isClientConnected();
         break;
       }
       usleep(ONE_SEC);
     }
+    
+    secure_element_callback_ = SharedRefBase::make<MySecureElementCallback>();
+    if(secure_element_callback_ == nullptr) return false;
+
+    mSEClient->init(secure_element_callback_);
+    
     return status;
 }
 
 bool AppletConnection::selectApplet(std::vector<uint8_t>& resp, uint8_t p2) {
   bool stat = false;
-  mSEClient->openLogicalChannel(
-      kAppletAID, p2, [&](LogicalChannelResponse selectResponse, SecureElementStatus status) {
-        if (status == SecureElementStatus::SUCCESS) {
-          resp = selectResponse.selectResponse;
-          mOpenChannel = selectResponse.channelNumber;
-          stat = true;
-          LOG(INFO) << "openLogicalChannel:" << toString(status) << " channelNumber ="
-                    << ::android::hardware::toString(selectResponse.channelNumber) << " "
-                    << selectResponse.selectResponse;
-        }
-      });
+  auto res = ndk::ScopedAStatus::ok();
+  LogicalChannelResponse logical_channel_response;
+  
+  res = mSEClient->openLogicalChannel(kAppletAID, p2, &logical_channel_response);
+  if (!res.isOk()) {
+      LOG(ERROR) << "openLogicalChannel error: " << res.getMessage();
+      return false;
+  }
+  if (logical_channel_response.channelNumber == 0) {
+      LOG(ERROR) << "Could not open channel null";
+      return false;
+  }
+  mOpenChannel = logical_channel_response.channelNumber;
+  resp = logical_channel_response.selectResponse;
+  stat = true;
+  LOG(INFO) << "openLogicalChannel: channelNumber ="
+            << ::android::hardware::toString(logical_channel_response.channelNumber) << " "
+            << logical_channel_response.selectResponse;
+
   return stat;
 }
 void prepareErrorRepsponse(std::vector<uint8_t>& resp){
@@ -151,8 +153,7 @@ void prepareErrorRepsponse(std::vector<uint8_t>& resp){
 bool AppletConnection::openChannelToApplet(std::vector<uint8_t>& resp) {
   bool ret = false;
   uint8_t retry = 0;
-  if (mCallback == nullptr || !mCallback->isClientConnected()) {
-    mSEClient = nullptr;
+  if (mSEClient == nullptr) {
     mOpenChannel = -1;
     if (!connectToSEService()) {
       LOG(ERROR) << "Not connected to eSE Service";
@@ -168,7 +169,8 @@ bool AppletConnection::openChannelToApplet(std::vector<uint8_t>& resp) {
 }
 
 bool AppletConnection::transmit(std::vector<uint8_t>& CommandApdu , std::vector<uint8_t>& output){
-    hidl_vec<uint8_t> cmd = CommandApdu;
+    std::vector<uint8_t> cmd = CommandApdu;
+    std::vector<uint8_t> transmitResponse;
     cmd[0] |= mOpenChannel ;
     LOGD_OMAPI("Channel number " << ::android::hardware::toString(mOpenChannel));
 
@@ -177,10 +179,16 @@ bool AppletConnection::transmit(std::vector<uint8_t>& CommandApdu , std::vector<
     // block any fatal signal delivery
     SignalHandler::getInstance()->blockSignals();
 
-    mSEClient->transmit(cmd, [&](hidl_vec<uint8_t> result) {
-        output = result;
-        LOG(INFO) << "recieved response size = " << ::android::hardware::toString(result.size()) << " data = " << result;
-    });
+    auto res = ndk::ScopedAStatus::ok();
+    res = mSEClient->transmit(cmd, &transmitResponse);
+    output = transmitResponse;
+    LOG(INFO) << "recieved response size = " << ::android::hardware::toString(transmitResponse.size()) << " data = " << transmitResponse;
+    LOG(INFO) << "STATUS OF TRNSMIT: " << res.getExceptionCode()
+          << " Message: " << res.getMessage();
+    if (!res.isOk()) {
+	LOG(ERROR) << "transmit error: " << res.getMessage();
+	return false;
+    }
 
     // un-block signal delivery
     SignalHandler::getInstance()->unblockSignals();
@@ -201,8 +209,10 @@ bool AppletConnection::close() {
        LOG(INFO) << "Channel is already closed";
        return true;
     }
-    SecureElementStatus status = mSEClient->closeChannel(mOpenChannel);
-    if (status != SecureElementStatus::SUCCESS) {
+    auto res = ndk::ScopedAStatus::ok();
+    
+    res = mSEClient->closeChannel(mOpenChannel);
+    if (!res.isOk()) {
         /*
          * reason could be SE reset or HAL deinit triggered from other client
          * which anyway closes all the opened channels
@@ -218,10 +228,8 @@ bool AppletConnection::close() {
 
 bool AppletConnection::isChannelOpen() {
     std::lock_guard<std::mutex> lock(channel_mutex_);
-    if(mCallback == nullptr || !mCallback->isClientConnected()) {
-      return false;
-    }
     return mOpenChannel >= 0;
 }
 
 }  // namespace keymint::javacard
+#endif

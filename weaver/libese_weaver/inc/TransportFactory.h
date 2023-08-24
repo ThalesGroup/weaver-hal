@@ -37,17 +37,21 @@
 #ifndef __SE_TRANSPORT_FACTORY__
 #define __SE_TRANSPORT_FACTORY__
 
+#ifndef OMAPI_TRANSPORT
 #include "HalToHalTransport.h"
+#else
 #include "OmapiTransport.h"
+#endif
 #include "SocketTransport.h"
 
 namespace se_transport {
 
-using keymint::javacard::HalToHalTransport;
 using keymint::javacard::ITransport;
 using keymint::javacard::SocketTransport;
 #ifdef OMAPI_TRANSPORT
 using keymint::javacard::OmapiTransport;
+#else
+using keymint::javacard::HalToHalTransport;
 #endif
 
 /**

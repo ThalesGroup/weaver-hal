@@ -110,10 +110,10 @@ Status_Weaver WeaverImpl::GetSlots(SlotInfo &slotInfo) {
   } else {
     LOG_E(TAG, "Failed to perform getSlot Request");
   }
-  if (!close()) {
+  /*if (!close()) {
     // Channel Close Failed
     LOG_E(TAG, "Failed to Close Channel");
-  }
+  }*/
   if (status == WEAVER_STATUS_OK) {
     status = mParser->ParseSlotInfo(resp, slotInfo);
     LOG_D(TAG, "Total Slots (%u) ", slotInfo.slots);
@@ -161,10 +161,10 @@ Status_Weaver WeaverImpl::Read(uint32_t slotId, const std::vector<uint8_t> &key,
       mTransport->Send(readCmd, resp)) {
     status = WEAVER_STATUS_OK;
   }
-  if (!close()) {
+  /*if (!close()) {
     // Channel Close Failed
     LOG_E(TAG, "Failed to Close Channel");
-  }
+  }*/
   if (status == WEAVER_STATUS_OK) {
     status = mParser->ParseReadInfo(resp, readRespInfo);
   } else {
@@ -200,10 +200,10 @@ Status_Weaver WeaverImpl::Write(uint32_t slotId,
       mTransport->Send(readCmd, resp)) {
     status = WEAVER_STATUS_OK;
   }
-  if (!close()) {
+  /*if (!close()) {
     LOG_E(TAG, "Failed to Close Channel");
     // Channel Close Failed
-  }
+  }*/
   if (status != WEAVER_STATUS_OK || (!mParser->isSuccess(resp))) {
     status = WEAVER_STATUS_FAILED;
   }

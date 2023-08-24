@@ -33,6 +33,7 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
+#ifndef OMAPI_TRANSPORT
 #pragma once
 #include "ITransport.h"
 #include <AppletConnection.h>
@@ -75,3 +76,4 @@ private:
     AppletConnection mAppletConnection;
 };
 }  // namespace keymint::javacard
+#endif

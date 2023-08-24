@@ -159,7 +159,7 @@ bool OmapiTransport::openConnection() {
 
 bool OmapiTransport::sendData(const vector<uint8_t>& inData, vector<uint8_t>& output) {
     std::vector<uint8_t> apdu(inData);
-#ifdef ENBALE_SESSION_TIMEOUT
+#ifdef ENABLE_SESSION_TIMEOUT
      LOGD_OMAPI("stop the timer");
      sessionTimer.stop();
 #endif
@@ -189,6 +189,8 @@ bool OmapiTransport::sendData(const vector<uint8_t>& inData, vector<uint8_t>& ou
 
 bool OmapiTransport::closeConnection() {
     LOG(DEBUG) << "Closing all connections";
+    if (channel != nullptr) channel->close();
+    if (session != nullptr) session->close();
     if (omapiSeService != nullptr) {
         if (mVSReaders.size() > 0) {
             for (const auto& [name, reader] : mVSReaders) {
@@ -197,6 +199,8 @@ bool OmapiTransport::closeConnection() {
             mVSReaders.clear();
         }
     }
+    omapiSeService = nullptr;
+    eSEReader = nullptr;
     return true;
 }
 
@@ -281,14 +285,16 @@ bool OmapiTransport::internalProtectedTransmitApdu(
     }
 
 #ifdef ENABLE_SESSION_TIMEOUT
-    long timeout = SESSION_TIMEOUT_30S;
-    LOG(DEBUG) << "Start timeout before closing channels ";
+    long timeout = 1000; // As error
+    timeout += SESSION_TIMEOUT_3S;
+    LOGD_OMAPI("Start timeout before closing channels ");
     if ( (transmitResponse.size() ==  2 + 4 + 1) && (transmitResponse.at(0) == 0x7F || transmitResponse.at(0) == 0x76) ) { // 2 + 4 + 1 = TAG_CODE_SIZE + VALUE_SIZE + RES_STATUS_SIZE
-        timeout = 1000 * ((transmitResponse.at(1) << 24)
+        timeout += 1000 * ((transmitResponse.at(1) << 24)
                                    + (transmitResponse.at(2) << 16)
                                    + (transmitResponse.at(3) << 8)
                                    + transmitResponse.at(4));
     }
+    LOGD_OMAPI("timeout value " << timeout);
     sessionTimer.start(timeout, this);
 #endif
 

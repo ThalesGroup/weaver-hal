@@ -24,10 +24,13 @@
 #include <csignal>
 #include <unistd.h>
 #include <atomic>
+#ifdef OMAPI_TRANSPORT
 #include "OmapiTransport.h"
+#else
 #include "HalToHalTransport.h"
+#endif
 
-#define SESSION_TIMEOUT_30S (30000)  // 30 s
+#define SESSION_TIMEOUT_3S (3000)  // 3 s
 
 class Timer {
 public:

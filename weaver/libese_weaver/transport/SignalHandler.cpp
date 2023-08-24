@@ -33,7 +33,7 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
-
+#ifndef OMAPI_TRANSPORT
 #define LOG_TAG "OmapiTransport_SignalHandler"
 
 #include <android-base/logging.h>
@@ -148,3 +148,4 @@ void SignalHandler::unblockSignals() {
 }
 
 }  // namespace keymint::javacard
+#endif

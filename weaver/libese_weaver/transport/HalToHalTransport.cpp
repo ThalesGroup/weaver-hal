@@ -33,6 +33,7 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
+#ifndef OMAPI_TRANSPORT
 #define LOG_TAG "HalToHalTransport"
 
 #include <vector>
@@ -45,9 +46,9 @@
 #include <EseTransportUtils.h>
 #include "SessionTimer.h"
 
-#ifndef OMAPI_TRANSPORT
+
 void* Timer::transport_ptr_a = nullptr;
-#endif
+
 
 namespace keymint::javacard {
 
@@ -83,8 +84,8 @@ bool HalToHalTransport::sendData(const vector<uint8_t>& inData, vector<uint8_t>&
         return mAppletConnection.close();
     }
 #ifdef ENABLE_SESSION_TIMEOUT
-     LOGD_OMAPI("Set the timer with timeout " << SESSION_TIMEOUT_30S << " ms");
-     sessionTimer_a.start(SESSION_TIMEOUT_30S, this);
+     LOGD_OMAPI("Set the timer with timeout " << SESSION_TIMEOUT_3S << " ms");
+     sessionTimer_a.start(SESSION_TIMEOUT_3S, this);
 #endif
     return status;
 }
@@ -97,3 +98,4 @@ bool HalToHalTransport::isConnected() {
     return mAppletConnection.isChannelOpen();
 }
 } // namespace keymint::javacard
+#endif

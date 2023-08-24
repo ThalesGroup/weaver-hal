@@ -33,7 +33,7 @@
  ** Copyright ©2023-2024 THALES. All rights Reserved.
  **
  *********************************************************************************/
-
+#ifndef OMAPI_TRANSPORT
 #ifndef __SIGNALHANDLER_H__
 #define __SIGNALHANDLER_H__
 
@@ -79,3 +79,4 @@ class SignalHandler {
 
 }  // namespace keymint::javacard
 #endif  // __SIGNALHANDLER_H__
+#endif
