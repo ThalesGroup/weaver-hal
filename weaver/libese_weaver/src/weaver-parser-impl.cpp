@@ -48,6 +48,7 @@ std::once_flag WeaverParserImpl::s_instanceFlag;
 #define KEY_SIZE 16
 #define VALUE_SIZE 16
 #define RES_STATUS_SIZE 2
+#define THROTTING_VALUE_SIZE 4
 
 /* For Applet Read Response TAG */
 #define INCORRECT_KEY_TAG 0x7F
@@ -244,11 +245,29 @@ Status_Weaver WeaverParserImpl::ParseReadInfo(std::vector<uint8_t> response,
     case INCORRECT_KEY_TAG:
       LOG_E(TAG, "INCORRECT_KEY");
       status = WEAVER_STATUS_INCORRECT_KEY;
+      if ((THROTTING_VALUE_SIZE + READ_ERR_CODE_SIZE + RES_STATUS_SIZE) ==
+          response.size()) {
+        readInfo.timeout = 1000 * ((response.at(READ_ERR_CODE_INDEX + 1) << 24)
+                                   + (response.at(READ_ERR_CODE_INDEX + 2) << 16)
+                                   + (response.at(READ_ERR_CODE_INDEX + 3) << 8)
+                                   + response.at(READ_ERR_CODE_INDEX + 4));
+      } else {
+        LOG_E(TAG, "Invalid Response: Cannot get back off time");
+      }
       readInfo.value.resize(0);
       break;
     case THROTTING_ENABLED_TAG:
       LOG_E(TAG, "THROTTING_ENABLED");
       status = WEAVER_STATUS_THROTTLE;
+      if ((THROTTING_VALUE_SIZE + READ_ERR_CODE_SIZE + RES_STATUS_SIZE) ==
+          response.size()) {
+        readInfo.timeout = 1000 * ((response.at(READ_ERR_CODE_INDEX + 1) << 24)
+                                   + (response.at(READ_ERR_CODE_INDEX + 2) << 16)
+                                   + (response.at(READ_ERR_CODE_INDEX + 3) << 8)
+                                   + response.at(READ_ERR_CODE_INDEX + 4));
+      } else {
+        LOG_E(TAG, "Invalid Response: Cannot get back off time");
+      }
       readInfo.value.resize(0);
       break;
     case READ_SUCCESS_TAG:
