@@ -171,8 +171,14 @@ bool AppletConnection::openChannelToApplet(std::vector<uint8_t>& resp) {
 bool AppletConnection::transmit(std::vector<uint8_t>& CommandApdu , std::vector<uint8_t>& output){
     std::vector<uint8_t> cmd = CommandApdu;
     std::vector<uint8_t> transmitResponse;
-    cmd[0] |= mOpenChannel ;
-    LOGD_OMAPI("Channel number " << ::android::hardware::toString(mOpenChannel));
+    int8_t ext_channelNumber;
+    if (mOpenChannel > 0x03) {
+       ext_channelNumber = 0x40 + (mOpenChannel - 0x04);
+    } else {
+            ext_channelNumber = mOpenChannel;
+    }
+    cmd[0] |= ext_channelNumber;
+    LOGD_OMAPI("Channel number " << ::android::hardware::toString(ext_channelNumber));
 
     if (mSEClient == nullptr) return false;
     

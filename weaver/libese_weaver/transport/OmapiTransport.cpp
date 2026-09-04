@@ -122,7 +122,7 @@ bool OmapiTransport::initialize() {
         }
 
         // Get SE readers handlers
-        for (auto readerName : readers) {
+        for (const auto& readerName : readers) {
             std::shared_ptr<::aidl::android::se::omapi::ISecureElementReader> reader;
             status = omapiSeService->getReader(readerName, &reader);
             if (!status.isOk()) {
