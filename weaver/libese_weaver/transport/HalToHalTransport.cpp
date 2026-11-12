@@ -47,9 +47,6 @@
 #include "SessionTimer.h"
 
 
-void* Timer::transport_ptr_a = nullptr;
-
-
 namespace keymint::javacard {
 
 #ifdef ENABLE_SESSION_TIMEOUT
@@ -84,8 +81,17 @@ bool HalToHalTransport::sendData(const vector<uint8_t>& inData, vector<uint8_t>&
         return mAppletConnection.close();
     }
 #ifdef ENABLE_SESSION_TIMEOUT
-     LOGD_OMAPI("Set the timer with timeout " << SESSION_TIMEOUT_3S << " ms");
-     sessionTimer_a.start(SESSION_TIMEOUT_3S, this);
+    long timeout = 1000; // base error margin
+    timeout += SESSION_TIMEOUT_3S;
+    LOGD_OMAPI("Start timeout before closing channels");
+    if ((output.size() == 2 + 4 + 1) && (output.at(0) == 0x7F || output.at(0) == 0x76)) {
+        timeout += 1000 * ((output.at(1) << 24)
+                         + (output.at(2) << 16)
+                         + (output.at(3) << 8)
+                         + output.at(4));
+    }
+    LOGD_OMAPI("timeout value " << timeout);
+    sessionTimer_a.start(timeout, this);
 #endif
     return status;
 }
