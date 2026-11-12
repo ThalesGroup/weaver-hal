@@ -118,6 +118,16 @@ Weaver::Weaver() {
 
 ::ndk::ScopedAStatus Weaver::warmUp() {
     ALOGI("warmUp API ENTRY");
+    if (pInterface == NULL) {
+        ALOGE("warmUp: Weaver Interface not defined");
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
+    }
+    Status_Weaver status = pInterface->WarmUp();
+    if (status != WEAVER_STATUS_OK) {
+        ALOGE("warmUp: failed to pre-open channel");
+        return ndk::ScopedAStatus(AStatus_fromServiceSpecificError(Weaver::STATUS_FAILED));
+    }
+    ALOGI("warmUp: channel pre-opened successfully");
     return ::ndk::ScopedAStatus::ok();
 }
 

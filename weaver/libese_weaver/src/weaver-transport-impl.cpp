@@ -115,11 +115,11 @@ bool WeaverTransportImpl::Init(std::vector<uint8_t> aid) {
 bool WeaverTransportImpl::OpenApplet(std::vector<uint8_t> data,
                                      std::vector<uint8_t> &resp) {
   LOG_D(TAG, "Entry");
-  bool status = true;
   UNUSED(data);
-  UNUSED(resp);
-  // Since libese_transport opens channel as part of send only so open applet is
-  // not required
+  bool status = getTransportFactoryInstance()->openConnection();
+  if (!status) {
+    LOG_E(TAG, "Failed to open channel to Weaver applet");
+  }
   LOG_D(TAG, "Exit");
   return status;
 }

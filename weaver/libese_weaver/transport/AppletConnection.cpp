@@ -113,12 +113,18 @@ bool AppletConnection::connectToSEService() {
       }
       usleep(ONE_SEC);
     }
+
+    if (mSEClient == nullptr) {
+        LOG(ERROR) << "failed to get eSE HAL service after retries";
+        return false;
+    }
     
     secure_element_callback_ = SharedRefBase::make<MySecureElementCallback>();
     if(secure_element_callback_ == nullptr) return false;
 
     mSEClient->init(secure_element_callback_);
     
+    status = true;
     return status;
 }
 
@@ -171,14 +177,16 @@ bool AppletConnection::openChannelToApplet(std::vector<uint8_t>& resp) {
 bool AppletConnection::transmit(std::vector<uint8_t>& CommandApdu , std::vector<uint8_t>& output){
     std::vector<uint8_t> cmd = CommandApdu;
     std::vector<uint8_t> transmitResponse;
-    int8_t ext_channelNumber;
-    if (mOpenChannel > 0x03) {
-       ext_channelNumber = 0x40 + (mOpenChannel - 0x04);
+
+	// Rewrite CLA byte per ISO 7816-4: clear channel bits first, then encode.
+    // Mirrors OMAPI Channel.java setChannelToClassByte logic.
+    if (mOpenChannel < 4) {
+        // First interindustry class byte: clear bits[1:0] and bit6, preserve SM bits.
+        cmd[0] = (cmd[0] & 0xBC) | (uint8_t)mOpenChannel;
     } else {
-            ext_channelNumber = mOpenChannel;
+        // Further interindustry class byte: clear bits[3:0] and bit6, set bit6 + offset.
+        cmd[0] = (cmd[0] & 0xB0) | 0x40 | (uint8_t)(mOpenChannel - 4);
     }
-    cmd[0] |= ext_channelNumber;
-    LOGD_OMAPI("Channel number " << ::android::hardware::toString(ext_channelNumber));
 
     if (mSEClient == nullptr) return false;
     

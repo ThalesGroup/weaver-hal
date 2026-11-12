@@ -243,6 +243,15 @@ Status_Weaver WeaverImpl::Write(uint32_t slotId,
   * \brief Function to warm up the eSE
   */
 Status_Weaver WeaverImpl::WarmUp() {
+    LOG_D(TAG, "Entry");
+    RETURN_IF_NULL(mTransport, WEAVER_STATUS_FAILED, "Transport is NULL");
+    std::vector<uint8_t> resp;
+    if (!mTransport->OpenApplet({}, resp)) {
+        LOG_E(TAG, "WarmUp: failed to open channel to Weaver applet");
+        LOG_D(TAG, "Exit : FAILED");
+        return WEAVER_STATUS_FAILED;
+    }
+    LOG_D(TAG, "Exit : SUCCESS");
     return WEAVER_STATUS_OK;
 }
 
