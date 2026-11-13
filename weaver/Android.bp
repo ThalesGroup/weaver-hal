@@ -1,9 +1,9 @@
 
 cc_binary {
     relative_install_path: "hw",
-    name: "android.hardware.weaver-service.default",
-    init_rc: ["1.0/android.hardware.weaver-service.default.rc"],
-    vintf_fragments: ["1.0/android.hardware.weaver-service.default.xml"],
+    name: "android.hardware.weaver-service.thales",
+    init_rc: ["1.0/android.hardware.weaver-service.thales.rc"],
+    vintf_fragments: ["1.0/android.hardware.weaver-service.thales.xml"],
     proprietary: true,
     srcs: [
         "1.0/WeaverService.cpp",

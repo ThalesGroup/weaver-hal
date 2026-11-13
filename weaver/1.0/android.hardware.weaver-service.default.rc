@@ -1,5 +1,0 @@
-service weaver_hal_service /vendor/bin/hw/android.hardware.weaver-service.default
-    class early_hal
-    user root
-    group root
-    seclabel u:r:su:s0
